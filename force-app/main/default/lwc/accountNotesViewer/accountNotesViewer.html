@@ -1,0 +1,49 @@
+<!-- accountNotesViewer.html -->
+<template>
+    <lightning-card title="Related Notes" icon-name="standard:note">
+        <div class="slds-p-around_medium">
+            <!-- Loading State -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+
+            <!-- Error State -->
+            <template if:true={error}>
+                <div class="slds-m-around_medium slds-text-color_error">
+                    Error loading notes: {error}
+                </div>
+            </template>
+
+            <!-- Main Content -->
+            <template if:false={isLoading}>
+                <!-- Notes Table -->
+                <div class="table-container slds-scrollable_x">
+                    <lightning-datatable data={paginatedNotes} columns={columns} key-field="contentDocumentId"
+                        hide-checkbox-column sorted-by={sortBy} sorted-direction={sortDirection} onsort={handleSort}>
+                    </lightning-datatable>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="slds-m-top_medium">
+                    <template if:true={showPaginationControls}>
+                        <div class="slds-align_absolute-center slds-p-top_medium">
+                            <lightning-button label="First" variant="neutral" onclick={handleFirst}
+                                disabled={isFirstPage}>
+                            </lightning-button>
+                            <lightning-button label="Previous" variant="neutral" onclick={handlePrevious}
+                                disabled={isFirstPage}>
+                            </lightning-button>
+                            <span class="slds-p-horizontal_small">
+                                Showing {pageStart}–{pageEnd} of {totalRecords} records
+                            </span>
+                            <lightning-button label="Next" variant="neutral" onclick={handleNext} disabled={isLastPage}>
+                            </lightning-button>
+                            <lightning-button label="Last" variant="neutral" onclick={handleLast} disabled={isLastPage}>
+                            </lightning-button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

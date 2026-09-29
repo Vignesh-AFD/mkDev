@@ -1,0 +1,86 @@
+<template>
+    <lightning-card title="CPM Calculator" icon-name="utility:budget_category_value">
+        <div class="slds-p-around_medium">
+            <!-- Total Cost Input -->
+            <div class="slds-form-element slds-m-bottom_medium">
+                <label class="slds-form-element__label" for="totalCost">
+                    Total Cost of Campaign ($)
+                </label>
+                <div class="slds-form-element__control">
+                    <input 
+                        type="number" 
+                        id="totalCost" 
+                        class="slds-input" 
+                        placeholder="Enter total cost"
+                        value={totalCost}
+                        onchange={handleTotalCostChange}
+                    />
+                </div>
+            </div>
+
+            <!-- CPM Input -->
+            <div class="slds-form-element slds-m-bottom_medium">
+                <label class="slds-form-element__label" for="cpm">
+                    Cost per 1,000 Impressions - CPM ($)
+                </label>
+                <div class="slds-form-element__control">
+                    <input 
+                        type="number" 
+                        id="cpm" 
+                        class="slds-input" 
+                        placeholder="Enter CPM"
+                        value={cpm}
+                        onchange={handleCpmChange}
+                    />
+                </div>
+            </div>
+
+            <!-- Impressions Input -->
+            <div class="slds-form-element slds-m-bottom_medium">
+                <label class="slds-form-element__label" for="impressions">
+                    Number of Impressions
+                </label>
+                <div class="slds-form-element__control">
+                    <input 
+                        type="number" 
+                        id="impressions" 
+                        class="slds-input" 
+                        placeholder="Enter impressions"
+                        value={impressions}
+                        onchange={handleImpressionsChange}
+                    />
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="slds-grid slds-gutters">
+                <div class="slds-col">
+                    <lightning-button
+                        label="Calculate"
+                        variant="brand"
+                        onclick={handleCalculate}
+                        class="slds-size_full"
+                    ></lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Reset"
+                        variant="neutral"
+                        onclick={handleReset}
+                        class="slds-size_full"
+                    ></lightning-button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <template if:true={showError}>
+                <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_small" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <span class="slds-notify__content">
+                        Please enter exactly two values to calculate the third.
+                    </span>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

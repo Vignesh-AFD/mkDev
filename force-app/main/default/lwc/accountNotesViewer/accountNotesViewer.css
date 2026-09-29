@@ -1,0 +1,31 @@
+/* accountNotesViewer.css */
+.table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* In CSS - Replace wrapping with clipping */
+.truncated-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+    /* Match initialWidth from column definition */
+}
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #dddbda;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #c9c7c5;
+}

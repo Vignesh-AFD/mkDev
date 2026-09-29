@@ -1,0 +1,66 @@
+.readiness-card {
+    background: #ead6ab;
+    border: 1px solid #d4bf8f;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px;
+}
+
+.icon-container {
+    padding-right: 12px;
+}
+
+.icon-container lightning-icon {
+    --slds-c-icon-color-foreground-default: #8b6914;
+}
+
+.content-container {
+    flex: 1;
+} 
+ 
+.banner-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #6c5220;
+}
+
+.banner-message {
+    font-size: .9rem;
+    font-weight: 600;
+    color: #6c5220;
+}
+
+.modal-width {
+    max-width: 80rem !important;
+    width: 80% !important;
+}
+
+
+.success-card {
+    background: #dff0d8;
+    border: 1px solid #b7d7a8;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.success-icon {
+    margin-right: 1rem;
+}
+
+.success-icon lightning-icon {
+    --slds-c-icon-color-foreground-default: #2e844a;
+}
+
+.success-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #2e844a;
+    line-height: 1.4;
+}
+
+.success-message {
+    font-size: 1rem;
+    color: #5c5c5c;
+    margin-top: 0.125rem;
+}

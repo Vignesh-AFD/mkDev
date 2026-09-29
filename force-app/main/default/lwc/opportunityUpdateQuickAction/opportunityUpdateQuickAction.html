@@ -1,0 +1,595 @@
+<template>
+
+    <!-- Warning Banner -->
+    <template if:true={showBanner}>
+        <template if:false={showRequiredFieldBanner}>
+            <div class="readiness-card">
+  
+                <div class="slds-grid slds-grid_vertical-align-center">
+
+                    <div class="icon-container">
+                        <lightning-icon
+                            icon-name="utility:warning"
+                            size="small"
+                            alternative-text="Warning">
+                        </lightning-icon>
+                    </div>
+
+                    <div class="content-container">
+
+                        <div class="banner-title">
+                            Action needed before closing
+                        </div>
+
+                        <div class="banner-message">
+                            Required fields are missing for signed/won readiness
+                        </div>
+
+                        <div class="slds-m-top_medium">
+                            <lightning-button 
+                                variant="brand"
+                                label="Complete signed/won readiness"
+                                onclick={openModal}>
+                            </lightning-button>
+                        </div>
+                    </div> 
+                </div>
+            </div>
+        </template>
+        <!-- Ready for Signed/Won Banner --> 
+        <template if:true={showSuccessBanner}>
+            <div class="success-card"> 
+                <div class="slds-grid slds-grid_vertical-align-center">
+
+                    <div class="success-icon">
+                        <lightning-icon
+                            icon-name="utility:success"
+                            size="small"
+                            alternative-text="Success">
+                        </lightning-icon>
+                    </div>
+
+                    <div class="success-content">
+
+                        <div class="success-title">
+                            Ready for signed/won
+                        </div>
+
+                        <div class="success-message">
+                            All required fields are complete. You can move this deal to closed won.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </template>
+
+    </template>
+
+    <!-- Modal -->
+    <template if:true={showModal}> 
+
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container modal-width">
+
+                <header class="slds-modal__header">
+
+                    <h2 class="slds-text-heading_medium">
+                        Closed Won Mandatory Information
+                    </h2>
+
+                    <button
+                        class="slds-button slds-button_icon slds-modal__close"
+                        onclick={closeModal}>
+
+                        <lightning-icon
+                            icon-name="utility:close"
+                            size="small">
+                        </lightning-icon>
+
+                    </button>
+
+                </header> 
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- Spinner -->
+                    <template if:true={isLoading}>
+                        <lightning-spinner
+                            alternative-text="Loading"
+                            size="medium">
+                        </lightning-spinner>
+                    </template>
+
+                    <!-- Progress Path --> 
+                    <template if:true={billingContactId}> 
+                        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                            <lightning-progress-indicator
+                                class="readonly-path"
+                                type="path"
+                                current-step={currentStepString}> 
+
+                                <lightning-progress-step
+                                    label="Billing Contact"
+                                    value="1">
+                                </lightning-progress-step>
+
+                                <template if:true={accountId}>
+                                    <lightning-progress-step
+                                        label="Advertiser"
+                                        value="2">
+                                    </lightning-progress-step>
+                                </template>
+
+                                <template if:true={agencyId}>
+                                    <lightning-progress-step
+                                        label="Agency"
+                                        value="3">
+                                    </lightning-progress-step>
+                                </template>
+
+                                <lightning-progress-step
+                                    label="Opportunity"
+                                    value="4">
+                                </lightning-progress-step>
+                            </lightning-progress-indicator>
+                        </div> 
+                    </template>
+
+                    
+                    <!-- Show Contact Lookup if Billing Contact does not exist -->
+                    <template if:false={billingContactId}>
+                        <template if:false={showNewContactForm}>
+                            <div class="slds-grid slds-wrap slds-gutters slds-p-bottom_medium">
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-record-picker
+                                        label="Billing Contact"
+                                        object-api-name="Contact"
+                                        value={selectedContactId}
+                                        filter={contactFilter}
+                                        display-info={contactDisplayInfo}
+                                        onchange={handleContactSelection}>
+                                    </lightning-record-picker>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-top_large">
+                                    <lightning-button
+                                        label="New Contact"
+                                        icon-name="utility:add"
+                                        onclick={handleNewContact}>
+                                    </lightning-button>
+                                </div>
+                            </div> 
+                        </template>
+ 
+                        <!-- Contact Creation Form -->
+                        <template if:true={showNewContactForm}>
+                            <div class="slds-box">
+                                <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                                    Create Billing Contact
+                                </h2>
+                                <div class="slds-grid slds-wrap slds-gutters">
+
+                                    <div class="slds-col slds-size_1-of-1">
+                                        <lightning-radio-group
+                                            label="Related To"
+                                            name="accountType"
+                                            value={accountType}
+                                            options={accountTypeOptions}
+                                            onchange={handleFieldChange}>
+                                        </lightning-radio-group>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="First Name"
+                                            name="firstName"
+                                            value={firstName}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Street"
+                                            name="street"
+                                            value={street}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Last Name"
+                                            name="lastName"
+                                            value={lastName}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="City"
+                                            name="city"
+                                            value={city}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            type="email"
+                                            label="Email"
+                                            name="email"
+                                            value={email}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-combobox
+                                            label="State"
+                                            name="state"
+                                            value={state}
+                                            options={stateOptions}
+                                            onchange={handleFieldChange}>
+                                        </lightning-combobox>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Invoice CC Email"
+                                            name="invoiceCCEmail"
+                                            value={invoiceCCEmail}
+                                            onchange={handleFieldChange}
+                                            >
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Zip"
+                                            name="zipCode"
+                                            value={zipCode}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-combobox
+                                            label="Invoice Delivery Method"
+                                            name="invoiceDeliveryMethod"
+                                            value={invoiceDeliveryMethod}
+                                            options={invoiceDeliveryOptions}
+                                            onchange={handleFieldChange}
+                                            >
+                                        </lightning-combobox>
+                                    </div>
+ 
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-combobox 
+                                            label="Country"
+                                            name="country" 
+                                            value={country}
+                                            options={countryOptions}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-combobox>
+                                    </div>
+ 
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:true={billingContactId}>
+                        <!-- STEP 1 -->
+                        <template if:true={isStep1}>
+
+                            <div class="slds-box"> 
+
+                                <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                                    Billing Contact
+                                </h2>
+
+                                <div class="slds-grid slds-wrap slds-gutters">
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="First Name"
+                                            name="firstName"
+                                            value={firstName}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Street"
+                                            name="street"
+                                            value={street}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Last Name"
+                                            name="lastName"
+                                            value={lastName}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="City"
+                                            name="city"
+                                            value={city}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            type="email"
+                                            label="Email"
+                                            name="email"
+                                            value={email}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-combobox
+                                            label="State"
+                                            name="state"
+                                            value={state}
+                                            options={stateOptions}
+                                            onchange={handleFieldChange}>
+                                        </lightning-combobox>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Invoice CC Email"
+                                            name="invoiceCCEmail"
+                                            value={invoiceCCEmail}
+                                            onchange={handleFieldChange}
+                                            >
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Zip"
+                                            name="zipCode"
+                                            value={zipCode}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div> 
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-combobox
+                                            label="Invoice Delivery Method"
+                                            name="invoiceDeliveryMethod"
+                                            value={invoiceDeliveryMethod}
+                                            options={invoiceDeliveryOptions}
+                                            onchange={handleFieldChange}
+                                            >
+                                        </lightning-combobox>
+                                    </div>
+ 
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-combobox 
+                                            label="Country"
+                                            name="country" 
+                                            value={country}
+                                            options={countryOptions}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-combobox>
+                                    </div> 
+
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input
+                                            label="Tax Id"
+                                            name="taxId"
+                                            value={taxId}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-input>
+                                    </div>
+
+                                </div> 
+
+                            </div>
+
+                        </template>
+
+                        <!-- STEP 2 -->
+                        <template if:true={isStep2}>
+                            <template if:true={showAdvertiserStep}>
+                            <div class="slds-box">
+ 
+                                <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                                    Advertiser 
+                                </h2> 
+
+                                <div class="slds-grid slds-wrap slds-gutters">
+
+                                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                        <lightning-input
+                                            label="Registered Legal Name"
+                                            name="accountLegalName"
+                                            value={accountLegalName}
+                                            onchange={handleFieldChange} required>
+                                        </lightning-input>
+                                    </div> 
+
+                                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                        <lightning-combobox
+                                            label="Registered Legal Addr Country"
+                                            name="accountBillingCountry" 
+                                            value={accountBillingCountry}
+                                            options={countryOptions}
+                                            onchange={handleFieldChange}
+                                            required>
+                                        </lightning-combobox>
+                                    </div>
+                                </div>
+                            </div>
+                            </template>
+                        </template>
+
+                        <!-- STEP 3 -->
+                        <template if:true={isStep3}>
+                            <template if:true={showAgencyStep}>
+                            <div class="slds-box">
+                                <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                                    Agency
+                                </h2> 
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                        <lightning-input
+                                            label="Registered Legal Name"
+                                            name="agencyLegalName"
+                                            value={agencyLegalName}
+                                            onchange={handleFieldChange} required>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                    </div>
+                                </div>
+                            </div>
+                            </template>
+                        </template>
+
+                        <!-- STEP 4 -->
+                        <template if:true={isStep4}>
+                            <div class="slds-box">
+                                <h2 class="slds-text-heading_small slds-m-bottom_medium">
+                                    Opportunity Information
+                                </h2>
+
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                        <lightning-input
+                                            label="PO Number (enter NA if no PO number)"
+                                            required
+                                            name="poNumber"
+                                            value={poNumber}
+                                            onchange={handleFieldChange}> 
+                                        </lightning-input>
+                                    </div> 
+                                    <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                                        <lightning-input
+                                            label="Lexion Contract URL"
+                                            name="lexionUrl"
+                                            value={lexionUrl}
+                                            onchange={handleFieldChange}>
+                                        </lightning-input>
+                                    </div>
+                                </div>
+                            </div>
+                        </template> 
+                    </template>
+
+                    <!-- FOOTER -->
+                    <footer class="slds-modal__footer">
+                        
+                        <lightning-button  
+                            label="Exit"
+                            onclick={closeModal}>
+                        </lightning-button>
+                        <template if:false={billingContactId}> 
+                            <lightning-button
+                                variant="brand"
+                                label="Create"
+                                if:true={isCreateNewContact}
+                                onclick={handleCreateContact}
+                                class="slds-m-left_small">
+                            </lightning-button>
+ 
+                            <lightning-button
+                                variant="brand"
+                                label="Update"
+                                if:false={isCreateNewContact}
+                                onclick={handleBillingContactUpdate}
+                                class="slds-m-left_small">
+                            </lightning-button>
+                        </template>
+
+                        <lightning-button
+                            if:true={billingContactId}
+                            label="Previous"
+                            onclick={handlePrevious}
+                            disabled={isFirstStep}
+                            class="slds-m-left_small">
+                        </lightning-button>
+
+                        <template if:false={isLastStep}>
+                            <lightning-button
+                                variant="brand"
+                                label="Save & Next"
+                                if:true={billingContactId}
+                                onclick={handleSaveAndNext}
+                                disabled={isNextDisabled}
+                                class="slds-m-left_small">
+                            </lightning-button>
+                        </template>
+ 
+                        <template if:true={isLastStep}>
+
+                            <lightning-button
+                                variant="brand"
+                                label="Save & Exit"
+                                if:true={billingContactId}
+                                onclick={handleUpdate}
+                                class="slds-m-left_small">
+                            </lightning-button>
+
+                            <lightning-button
+                                variant="brand"
+                                label="Mark Signed/Won"
+                                if:true={billingContactId}
+                                onclick={handleMarkSignedWonUpdate}
+                                class="slds-m-left_small">
+                            </lightning-button>
+                        </template>
+
+                        
+
+                    </footer>
+   
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+
+    </template>
+ 
+</template>

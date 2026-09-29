@@ -1,0 +1,81 @@
+<template>
+
+    <lightning-card title="User Sales Editor">
+
+        <div class="slds-p-around_medium">
+
+            <!-- User Search -->
+            <lightning-input
+                type="text"
+                label="Search User"
+                value={searchTerm}
+                onchange={handleSearchChange}>
+            </lightning-input>
+
+            <!-- Search Results -->
+            <template if:true={hasUsers}>
+                <div class="search-results">
+
+                    <template for:each={users} for:item="usr">
+                        <div
+                            key={usr.Id}
+                            class="search-item"
+                            data-id={usr.Id}
+                            data-name={usr.Name}
+                            onclick={handleUserSelect}>
+
+                            {usr.Name} ({usr.Email})
+
+                        </div>
+                    </template>
+
+                </div>
+            </template>
+
+            <!-- Selected User Fields -->
+            <template if:true={selectedUserId}>
+
+                <div class="slds-m-top_large">
+
+                    <!-- Sales Vertical -->
+                    <lightning-combobox
+                        label="Sales Vertical"
+                        value={salesVertical}
+                        options={salesVerticalOptions}
+                        onchange={handleVerticalChange}>
+                    </lightning-combobox>
+
+                    <!-- Sales Region -->
+                    <lightning-combobox
+                        label="Sales Region"
+                        value={salesRegion}
+                        options={salesRegionOptions}
+                        onchange={handleRegionChange}>
+                    </lightning-combobox>
+
+                    <div class="slds-m-top_medium">
+
+                        <lightning-button
+                            variant="brand"
+                            label="Save"
+                            onclick={handleSave}>
+                        </lightning-button>
+
+                        <lightning-button
+                            class="slds-m-left_small"
+                            variant="neutral"
+                            label="Cancel"
+                            onclick={handleCancel}>
+                        </lightning-button>
+
+                    </div>
+
+                </div>
+
+            </template>
+
+        </div>
+
+    </lightning-card>
+
+</template>

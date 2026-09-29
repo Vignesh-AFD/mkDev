@@ -1,0 +1,57 @@
+<template>
+ <lightning-card title="Select Account :" icon-name="standard:account">
+            <template if:true={selectedAccount}>
+              <lightning-layout>
+                <lightning-card title="Select Account">
+                    <div class="slds-p-around_medium">
+
+                        <!-- Selected Account Input -->
+                        <div class="slds-size_1-of-1">
+                            <lightning-input label="Selected Account" value={selectedAccount} disabled></lightning-input>
+                            <lightning-input label="Account Executive" value={selectedAccAEName} disabled></lightning-input>
+                            <lightning-input label="Dev Solution Lead" value={selectedAccDevSolLeadName} disabled></lightning-input>
+                        </div>
+
+                        <!-- Buttons Row -->
+                        <div class="slds-m-top_medium slds-grid slds-grid_align-center slds-gutters_small">
+                            <lightning-button
+                                label="Attach"
+                                variant="brand-outline"
+                                onclick={handleAttach}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Cancel"
+                                variant="neutral"
+                                onclick={handleClear}>
+                            </lightning-button>
+                        </div>
+
+                    </div>
+
+                </lightning-card>
+              </lightning-layout>
+            
+            </template>
+            <template if:false={selectedAccount}>
+              <div class="slds-box slds-theme_default">
+                <lightning-input type="search" onchange={handleKeyChange} class="slds-m-bottom_small"
+                  label="Type in an account name and Select one:"
+                  placeholder="Enter at least 3 characters to Search Accounts"></lightning-input>
+                <template if:true={accFlag}>
+                  <template if:true={accountsList}>
+                  
+                    <lightning-datatable key-field="Id" data={accountsList} columns={columns}
+                      onrowselection={handleRowSelection} max-row-selection=1>
+                    </lightning-datatable>
+                  </template>
+                </template>
+                <template if:false={accFlag}>
+       
+                  <lightning-card title="No Accounts under this Name." icon-name="standard:account">
+                  </lightning-card>
+                </template>
+              </div>
+            </template>
+           </lightning-card>
+</template>
