@@ -42,28 +42,23 @@ Feature pushes do not automatically merge into QA, UAT, or Production. Promotion
 1. Create GitHub Environments named `dev`, `qa`, `uat`, and `production`. Restrict each environment to its matching branch: `dev`, `qa`, `uat`, or `main` for `production`.
 2. Configure required reviewers on `uat` (QA sign-off before the UAT deployment) and `production` (stakeholder approval before Production). GitHub Environment approvals pause the deployment job until approval. Use distinct reviewer teams where appropriate.
 3. Add these environment secrets separately to each environment so each stage authenticates to its own Salesforce org:
-	- `SF_CLIENT_ID`: the Salesforce Connected App consumer key.
-	- `SF_USERNAME`: the deployment integration user's username for that org.
-	- `SF_JWT_KEY`: the PEM private key corresponding to the certificate configured in the Connected App.
-	- `SF_LOGIN_URL`: the org login URL, such as `https://test.salesforce.com` for sandboxes or `https://login.salesforce.com` for Production. Prefer the org's My Domain URL when required by your Salesforce configuration.
+	- `SF_AUTH_URL`: the SFDX Auth URL for that environment's dedicated deployment user.
 4. Create a GitHub App installed on this repository with repository `Contents: Read-only` and `Pull requests: Read and write` permissions. Add repository Actions secrets `PROMOTION_APP_ID` and `PROMOTION_APP_PRIVATE_KEY`; the app token is used only to open/reuse promotion PRs. This avoids the workflow-trigger suppression that applies to PRs created with the default `GITHUB_TOKEN`.
-5. Configure Salesforce JWT bearer authentication for a Connected App in each org and authorize the matching integration user. Grant only the metadata deployment and test-running permissions needed for this project.
+5. Create a separate Salesforce deployment user for each org (Dev, QA, UAT, and Production). Grant each user only the metadata deployment and Apex test permissions needed for this project; do not use a personal Salesforce account.
 6. Protect `dev`, `qa`, `uat`, and `main` with pull-request requirements. Require the `Validate Salesforce source` status check, at least one approval, dismissal of stale approvals, and restrictions on bypasses and force-pushes. Configure `CODEOWNERS` or restricted reviewer teams if stage-specific review ownership is needed. Do not allow direct pushes to persistent branches.
 
-#### Salesforce Connected App and JWT setup
+#### SFDX Auth URL setup
 
-1. In each Salesforce org, create or configure a Connected App with OAuth enabled and digital signatures enabled. Upload the public certificate, enable the JWT bearer flow, and note the consumer key as `SF_CLIENT_ID`.
-2. Create a dedicated deployment integration user in each org. Grant the minimum required deployment and Apex test permissions, authorize that user for the Connected App, and use its username as `SF_USERNAME`.
-3. Generate a private key and matching public certificate using your organization's approved key-management process. For example, with OpenSSL on a secured workstation:
+1. Install Salesforce CLI on a trusted workstation and log in separately to each org as its matching deployment user. For example, for QA:
 
 	```sh
-	openssl genrsa -out server.key 2048
-	openssl req -new -x509 -key server.key -out server.crt -days 3650
+	sf org login web --alias qa-ci --instance-url https://test.salesforce.com
 	```
 
-	Upload only `server.crt` to Salesforce. Store the contents of `server.key` as the environment secret `SF_JWT_KEY`; never commit the private key or print it in workflow logs.
-4. Set each environment's `SF_LOGIN_URL` to the appropriate Salesforce My Domain or login URL. Use a sandbox login URL for Dev/QA/UAT and the production login URL for Production.
-5. Rotate the certificate/private key on a schedule and immediately after any suspected exposure. Update the Salesforce certificate and GitHub Environment secret together.
+2. Retrieve that org's SFDX Auth URL with `sf org display --target-org qa-ci --verbose`. Repeat for Dev, UAT, and Production, using each dedicated user and the correct org login URL.
+3. Add each URL as the `SF_AUTH_URL` secret in its corresponding GitHub Environment. Never commit, print in CI logs, or share an Auth URL; it contains reusable authentication credentials. If one is exposed, revoke that user's org authorization and replace the secret.
+4. Keep Auth URLs in GitHub Environment secrets, restrict who can administer those environments, and set the Production environment to require stakeholder approval before deployments.
+5. Once the pipeline is stable, migrate to JWT bearer authentication using a Connected App and per-environment `SF_CLIENT_ID`, `SF_USERNAME`, `SF_JWT_KEY`, and `SF_LOGIN_URL` secrets. After verifying JWT deployments, remove the Auth URL secrets and revoke the old authorizations.
 
 #### Branch protection and promotion
 
