@@ -4,7 +4,13 @@ on:
   pull_request:
     branches: [dev, qa, uat, main]
   push:
-    branches: [dev, qa, uat, main]
+    branches:
+      - dev
+      - qa
+      - uat
+      - main
+      - 'feature/**'
+      - 'bugfix/**'
 
 permissions:
   contents: read
@@ -25,9 +31,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Run LWC unit tests
         run: npm test
@@ -37,11 +44,17 @@ jobs:
 
   deploy:
     name: Deploy to Salesforce
-    if: github.event_name == 'push'
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref_name == 'dev' || github.ref_name == 'qa' ||
+      github.ref_name == 'uat' || github.ref_name == 'main')
     needs: validate
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
+    concurrency:
+      group: salesforce-deploy-${{ github.ref_name }}
+      cancel-in-progress: false
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -78,3 +91,47 @@ jobs:
           --target-org deploy-target
           --test-level RunLocalTests
           --wait 60
+
+  promote:
+    name: Open next-stage promotion PR
+    if: needs.deploy.result == 'success' && github.ref_name != 'main'
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      HEAD_BRANCH: ${{ github.ref_name }}
+      BASE_BRANCH: ${{ github.ref_name == 'dev' && 'qa' || github.ref_name == 'qa' && 'uat' || 'main' }}
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.PROMOTION_APP_ID }}
+          private-key: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+
+      - name: Open or reuse promotion PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          existing_pr=$(gh pr list \
+            --repo "$GH_REPO" \
+            --state open \
+            --base "$BASE_BRANCH" \
+            --head "$HEAD_BRANCH" \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$existing_pr" ]; then
+            echo "Promotion PR #$existing_pr is already open."
+          else
+            gh pr create \
+              --repo "$GH_REPO" \
+              --base "$BASE_BRANCH" \
+              --head "$HEAD_BRANCH" \
+              --title "Promote $HEAD_BRANCH to $BASE_BRANCH" \
+              --body "Automated promotion PR created after a successful Salesforce deployment to $HEAD_BRANCH. Review and merge this PR to advance the release."
+          fi
