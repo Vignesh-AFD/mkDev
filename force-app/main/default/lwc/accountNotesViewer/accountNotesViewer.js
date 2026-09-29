@@ -5,6 +5,7 @@ import getRelatedNotes from '@salesforce/apex/AccountNotesController.getRelatedN
 const DATE_FIELDS = ['createdDate', 'contentModifiedDate'];
 
 export default class AccountNotesViewer extends NavigationMixin(LightningElement) {
+    
     @api recordId;
     @track notes = [];
     @track isLoading = true;
