@@ -77,7 +77,7 @@ export default class AccountSearchLWC extends LightningElement {
                 accName: this.selectedAccount,
                 leadId: this.recordId
             })
-            .then(() => {
+            .then(result => {
                 console.log('Account attached successfully');
                 this.showToast(
                     'Success',
