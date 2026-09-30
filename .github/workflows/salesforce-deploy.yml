@@ -33,11 +33,6 @@ jobs:
           node-version: 20
           cache: npm
       
-      - name: Install Salesforce CLI
-        run: |
-          npm install --global @salesforce/cli@2
-          sf --version
-
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
@@ -64,8 +59,15 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Set up Salesforce CLI
-        uses: salesforcecli/setup-sf@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Salesforce CLI
+        run: |
+          npm install --global @salesforce/cli@2
+          sf --version
 
       - name: Authenticate to Salesforce
         env:
@@ -133,8 +135,8 @@ jobs:
           fi
 
   feature_qa_pr:
-    name: Open feature/otcUseCase to QA PR
-    if: github.event_name == 'push' && github.ref_name == 'feature/otcUseCase'
+    name: Open feature branch to QA PR
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feature/')
     needs: validate
     runs-on: ubuntu-latest
     permissions:
@@ -152,7 +154,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
-          HEAD_BRANCH: feature/otcUseCase
+          HEAD_BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           existing_pr=$(gh pr list \
@@ -170,6 +172,6 @@ jobs:
               --repo "$GH_REPO" \
               --base qa \
               --head "$HEAD_BRANCH" \
-              --title "Promote feature/otcUseCase to QA" \
-              --body "Automated QA PR created after CI validation passed for feature/otcUseCase. Review and merge to deploy the changes to the QA Salesforce org."
+              --title "Promote $HEAD_BRANCH to QA" \
+              --body "Automated QA PR created after CI validation passed for $HEAD_BRANCH. Review and merge to deploy the changes to the QA Salesforce org."
           fi
