@@ -2,7 +2,7 @@ public with sharing class AccountNotesController {
     @AuraEnabled(cacheable=true)
     public static List<NoteWrapper> getRelatedNotes(Id accountId) {
         List<NoteWrapper> result = new List<NoteWrapper>();
-        // First get all ContentDocumentIds related to the accounts
+        // First get all ContentDocumentIds related to the account
         List<ContentDocumentLink> accountDocLinks = [
             SELECT ContentDocumentId
             FROM ContentDocumentLink
