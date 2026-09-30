@@ -64,24 +64,15 @@ jobs:
 
       - name: Authenticate to Salesforce
         env:
-          SF_CLIENT_ID: ${{ secrets.SF_CLIENT_ID }}
-          SF_USERNAME: ${{ secrets.SF_USERNAME }}
-          SF_JWT_KEY: ${{ secrets.SF_JWT_KEY }}
-          SF_LOGIN_URL: ${{ secrets.SF_LOGIN_URL }}
+          SF_AUTH_URL: ${{ secrets.SF_AUTH_URL }}
         run: |
           set -euo pipefail
-          test -n "$SF_CLIENT_ID"
-          test -n "$SF_USERNAME"
-          test -n "$SF_JWT_KEY"
-          test -n "$SF_LOGIN_URL"
-          key_file="$RUNNER_TEMP/server.key"
-          trap 'rm -f "$key_file"' EXIT
-          printf '%s' "$SF_JWT_KEY" > "$key_file"
-          sf org login jwt \
-            --client-id "$SF_CLIENT_ID" \
-            --jwt-key-file "$key_file" \
-            --username "$SF_USERNAME" \
-            --instance-url "$SF_LOGIN_URL" \
+          test -n "$SF_AUTH_URL"
+          auth_file="$RUNNER_TEMP/sfdx-auth-url.txt"
+          trap 'rm -f "$auth_file"' EXIT
+          printf '%s' "$SF_AUTH_URL" > "$auth_file"
+          sf org login sfdx-url \
+            --sfdx-url-file "$auth_file" \
             --alias deploy-target
 
       - name: Deploy source and run Apex tests
@@ -134,4 +125,46 @@ jobs:
               --head "$HEAD_BRANCH" \
               --title "Promote $HEAD_BRANCH to $BASE_BRANCH" \
               --body "Automated promotion PR created after a successful Salesforce deployment to $HEAD_BRANCH. Review and merge this PR to advance the release."
+          fi
+
+  feature_qa_pr:
+    name: Open feature/otcUseCase to QA PR
+    if: github.event_name == 'push' && github.ref_name == 'feature/otcUseCase'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.PROMOTION_APP_ID }}
+          private-key: ${{ secrets.PROMOTION_APP_PRIVATE_KEY }}
+
+      - name: Open or reuse feature to QA PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_BRANCH: feature/otcUseCase
+        run: |
+          set -euo pipefail
+          existing_pr=$(gh pr list \
+            --repo "$GH_REPO" \
+            --state open \
+            --base qa \
+            --head "$HEAD_BRANCH" \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$existing_pr" ]; then
+            echo "QA PR #$existing_pr is already open."
+          else
+            gh pr create \
+              --repo "$GH_REPO" \
+              --base qa \
+              --head "$HEAD_BRANCH" \
+              --title "Promote feature/otcUseCase to QA" \
+              --body "Automated QA PR created after CI validation passed for feature/otcUseCase. Review and merge to deploy the changes to the QA Salesforce org."
           fi

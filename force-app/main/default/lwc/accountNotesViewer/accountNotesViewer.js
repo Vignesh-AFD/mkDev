@@ -1,10 +1,11 @@
-import { LightningElement, api, track, wire } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import getRelatedNotes from '@salesforce/apex/AccountNotesController.getRelatedNotes';
 
 const DATE_FIELDS = ['createdDate', 'contentModifiedDate'];
 
 export default class AccountNotesViewer extends NavigationMixin(LightningElement) {
+    //Test comment
     @api recordId;
     @track notes = [];
     @track isLoading = true;

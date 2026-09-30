@@ -147,11 +147,7 @@ export default class UserSalesEditor extends LightningElement {
                 })
             );
 
-            // Reset component
-            // this.resetComponent();
-            setTimeout(() => {
-                this.resetComponent();
-            }, 2000);
+            this.resetComponent();
         })
         .catch(error => {
 
